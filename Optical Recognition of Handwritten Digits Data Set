@@ -1,0 +1,92 @@
+#Optical Recognition of Handwritten Digits Data Set
+#SVM classification model
+#image visualization
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn import svm
+
+def load(path_train, path_test):
+    # Load up the data.
+    
+    with open(path_test, 'r')  as f: testing  = pd.read_csv(f,header=None)
+    with open(path_train, 'r') as f: training = pd.read_csv(f,header=None)
+
+    n_features = testing.shape[1]
+
+    X_test  = testing.ix[:,:n_features-1]
+    X_train = training.ix[:,:n_features-1]
+    y_test  = testing.ix[:,n_features-1:].values.ravel()
+    y_train = training.ix[:,n_features-1:].values.ravel()
+    
+    return X_train, X_test, y_train, y_test
+    
+def peekData(X_train):
+    # The 'targets' or labels are stored in y. The 'samples' or data is stored in X
+    print("Peeking your data...")
+    fig = plt.figure()
+    fig.set_tight_layout(True)
+
+    cnt = 0
+    for col in range(5):
+        for row in range(10):
+            plt.subplot(5, 10, cnt + 1)
+            plt.imshow(X_train.ix[cnt,:].reshape(8,8), cmap=plt.cm.gray_r, interpolation='nearest') 
+            plt.axis('off')
+            cnt += 1
+            
+    plt.show()
+    
+def drawPredictions(X_train, X_test, y_train, y_test):
+    fig = plt.figure()
+    fig.set_tight_layout(True)
+    
+    y_guess = model.predict(X_test)
+
+    num_rows = 10
+    num_cols = 5
+
+    index = 0
+    for col in range(num_cols):
+        for row in range(num_rows):
+            plt.subplot(num_cols, num_rows, index + 1)
+
+            # 8x8 is the size of the image, 64 pixels
+            plt.imshow(X_test.ix[index,:].reshape(8,8), cmap=plt.cm.gray_r, interpolation='nearest')
+
+            # Green = Guessed right
+            # Red = Fail!
+            fontcolor = 'g' if y_test[index] == y_guess[index] else 'r'
+            plt.title('Label: %i' % y_guess[index], fontsize=6, color=fontcolor)
+            plt.axis('off')
+            index += 1
+    plt.show()
+    
+X_train, X_test, y_train, y_test = load('optdigits.tra', 'optdigits.tes')
+
+X_train=X_train.ix[:,0:63]
+X_test=X_test.ix[:,0:63]
+
+peekData(X_train)
+
+peekData(X_test)
+
+print("Training SVC Classifier...")
+from sklearn.svm import SVC
+#model = SVC(kernel='linear',C=1,gamma=0.001)
+#model = SVC(kernel='poly',C=1,gamma=0.001)
+model = SVC(kernel='rbf',C=1,gamma=0.001)
+fit = model.fit(X_train, y_train)
+predict = model.predict(X_test)
+
+print("Scoring SVC Classifier...")
+score = model.score(X_test, y_test)
+print("Score:\n", score)
+
+drawPredictions(X_train, X_test, y_train, y_test)
+
+true_1000th_test_value = y_test[1000]
+print("1000th test label: ", true_1000th_test_value)
+
+guess_1000th_test_value = predict[1000]
+print("1000th test prediction: ", guess_1000th_test_value)
