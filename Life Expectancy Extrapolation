@@ -1,0 +1,59 @@
+#Life Expectancy Extrapolation
+#linear regression
+#time series
+#scatter plot with predicted line
+#correlation matrix visualization
+
+import pandas as pd
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+
+matplotlib.style.use('ggplot')
+
+def drawLine(model, X_test, y_test, title):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.scatter(X_test, y_test, c='g', marker='o')
+    ax.plot(X_test, model.predict(X_test), color='orange', linewidth=1, alpha=0.7)
+
+    print("Est 2014 " + title + " Life Expectancy: ", model.predict([[2014]])[0])
+    print("Est 2030 " + title + " Life Expectancy: ", model.predict([[2030]])[0])
+    print("Est 2045 " + title + " Life Expectancy: ", model.predict([[2045]])[0])
+
+    score = model.score(X_test, y_test)
+    title += " R2: " + str(score)
+    ax.set_title(title)
+
+    plt.show()
+    
+X=pd.read_csv('life_expectancy.csv', delimiter='\t')
+
+X.describe()
+
+X_train = X.Year[X['Year']<1986]
+y_train = X.WhiteMale[X['Year']<1986]
+X_test = X.Year[X['Year']>=1986]
+y_test = X.WhiteMale[X['Year']>=1986]
+
+from sklearn.linear_model import LinearRegression
+regl=LinearRegression()
+X_train1=X_train.as_matrix().reshape(X_train.shape[0],1)
+y_train1=y_train.as_matrix().reshape(y_train.shape[0],1)
+X_test1=X_test.as_matrix().reshape(X_test.shape[0],1)
+y_test1=y_test.as_matrix().reshape(y_test.shape[0],1)
+model=regl.fit(X_train1, y_train1)
+predict=regl.predict(X_test1)
+drawLine(model, X_test1, y_test1, 'WhiteMale')
+
+X.loc[X['Year']==2014, 'WhiteMale'  ]
+
+X.corr()
+
+plt.imshow(X.corr(), cmap=plt.cm.Blues, interpolation='nearest')
+plt.colorbar()
+tick_marks = [i for i in range(len(X.columns))]
+plt.xticks(tick_marks, X.columns, rotation='vertical')
+plt.yticks(tick_marks, X.columns)
+
+plt.show()
