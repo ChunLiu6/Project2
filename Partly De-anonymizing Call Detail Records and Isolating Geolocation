@@ -1,0 +1,87 @@
+#Partly De-anonymizing Call Detail Records and Isolating Geolocation
+#k means
+
+import pandas as pd
+from datetime import timedelta
+import matplotlib.pyplot as plt
+import matplotlib
+
+matplotlib.style.use('ggplot')
+
+def clusterWithFewestSamples(model):
+    # Ensure there's at least on cluster...
+    minSamples = len(model.labels_)
+    minCluster = 0
+    
+    for i in range(len(model.cluster_centers_)):
+        if minSamples > (model.labels_==i).sum():
+            minCluster = i
+            minSamples = (model.labels_==i).sum()
+
+    print("\n  Cluster With Fewest Samples: ", minCluster)
+    return (model.labels_==minCluster)
+
+
+cdr=pd.read_csv('CDR.csv')
+
+CallDate=pd.to_datetime(cdr['CallDate'])
+cdr.drop(['CallDate'],axis=1)
+cdr['CallDate']=CallDate
+CallTime=pd.to_timedelta(cdr['CallTime'])
+cdr.drop(['CallTime'],axis=1)
+cdr['CallTime']=CallTime
+cdr.dtypes
+
+In=cdr['In'].unique()
+unique_numbers=In.tolist()
+unique_numbers
+
+user1=cdr.loc[cdr['In']==4638472273,]
+user1
+
+user1_weekdays=user1.loc[(user1['DOW']!='Sat') & (user1['DOW']!='Sun'),]
+user1_weekdays
+
+user1_weekdays_time=user1_weekdays.loc[user1_weekdays['CallTime']<"17:00:00",]
+user1_weekdays_time
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.scatter(user1_weekdays_time.TowerLon,user1_weekdays_time.TowerLat, c='g', marker='o', alpha=0.2)
+ax.set_title('Weekday Calls (<5p)')
+plt.show()
+
+def doKMeans(data, num_clusters=0):
+    from sklearn.cluster import KMeans
+    model=KMeans(n_clusters=num_clusters)
+    model.fit(data)
+    return model
+    
+location=user1_weekdays_time[['TowerLat','TowerLon']]
+model = doKMeans(location, 3)
+model.cluster_centers_
+
+midWayClusterIndices = clusterWithFewestSamples(model)
+midWaySamples = user1_weekdays_time[midWayClusterIndices]
+print("    Its Waypoint Time: ", midWaySamples.CallTime.mean())
+
+%matplotlib notebook
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.scatter(user1_weekdays_time.TowerLon,user1_weekdays_time.TowerLat, c='g', marker='o', alpha=0.2)
+ax.scatter(model.cluster_centers_[:,1], model.cluster_centers_[:,0], s=169, c='r', marker='x', alpha=0.8, linewidths=2)
+ax.set_title('Weekday Calls Centroids')
+plt.show()
+
+labels=pd.Series(model.labels_.tolist())
+labels.value_counts()
+
+for i in range(10):
+    user=cdr.loc[cdr['In']==unique_numbers[i],]
+    user_weekdays=user.loc[(user['DOW']!='Sat') & (user['DOW']!='Sun'),]
+    user_weekdays_time=user_weekdays.loc[user_weekdays['CallTime']<"17:00:00",]
+    location=user_weekdays_time[['TowerLat','TowerLon']]
+    model=doKMeans(location, 4)
+    print(unique_numbers[i])
+    print(model.cluster_centers_)
+    print(pd.Series(model.labels_.tolist()).value_counts())
