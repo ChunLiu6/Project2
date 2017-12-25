@@ -60,7 +60,7 @@ num_pixels = int(math.sqrt(num_pixels))
 for i in range(num_images):
     df.loc[i,:] = df.loc[i,:].reshape(num_pixels, num_pixels).T.reshape(-1)
     
-face_label=pd.read_csv('F:\\MS Data Science\\Programming with Python for Data Science\\face_labels.csv',header=None)
+face_label=pd.read_csv('face_labels.csv',header=None)
 face_label.columns=['label']
 y=face_label['label']
 
