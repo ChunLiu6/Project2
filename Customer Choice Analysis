@@ -1,10 +1,3 @@
-install.packages("NbClust")
-library("NbClust")
-install.packages("mclust")
-library("mclust")
-install.packages("gmodels")
-library("gmodels")
-
 set.seed(1990)
 
 campaign<-read.csv(file="campaign.csv")
@@ -29,6 +22,11 @@ kmeans_summary
 
 Kmeans_Cluster<-factor(kmeans_cluster,levels = c(1,2,3,4),
                     labels = c("campaign", "age_balance", "pdays_previous","duration"))
+                    
+install.packages("gmodels")
+library("gmodels")
+                    
+                    
 CrossTable(data$y, Kmeans_Cluster,prop.chisq = FALSE, prop.r = T, prop.c = T,
            prop.t = F,chisq = T)
 
