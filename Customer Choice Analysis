@@ -1,0 +1,137 @@
+install.packages("NbClust")
+library("NbClust")
+install.packages("mclust")
+library("mclust")
+install.packages("gmodels")
+library("gmodels")
+
+set.seed(1990)
+
+campaign<-read.csv(file="campaign.csv")
+head(campaign)
+data=campaign
+head(data)
+length(data$age)
+seg_data=data.frame(age=data$age,balance=data$balance,duration=data$duration,campaign=data$campaign,pdays=data$pdays,previous=data$previous)
+std_seg_data<-scale(seg_data)
+head(std_seg_data)
+#dist<-dist(std_seg_data,method="euclidean")
+#as.matrix(dist)[1:5,1:5]
+
+
+set.seed(1990)
+kmeans_Cluster4 <-kmeans(std_seg_data, 4, iter.max=100,nstart=100)
+kmeans_Cluster4
+kmeans_cluster=kmeans_Cluster4$cluster
+
+kmeans_summary <- aggregate(std_seg_data,by=list(kmeans_cluster),FUN=mean)
+kmeans_summary
+
+Kmeans_Cluster<-factor(kmeans_cluster,levels = c(1,2,3,4),
+                    labels = c("campaign", "age_balance", "pdays_previous","duration"))
+CrossTable(data$y, Kmeans_Cluster,prop.chisq = FALSE, prop.r = T, prop.c = T,
+           prop.t = F,chisq = T)
+
+
+data$age_group[data$age>=18 & data$age<=30]=1
+data$age_group[data$age>=31 & data$age<=60]=2
+data$age_group[data$age>=61 & data$age<=100]=3
+CrossTable(data$y, data$age_group, prop.chisq = FALSE, prop.r = T, prop.c = T,
+           prop.t = F,chisq = T)
+
+summary(data$pdays)
+data$pdays_group[data$pdays<=40.2]=1
+data$pdays_group[data$pdays>40.2]=2
+
+CrossTable(data$y, data$pdays_group, prop.chisq = FALSE, prop.r = T, prop.c = T,
+           prop.t = F,chisq = T)
+
+summary(data$duration)
+data$duration_group[data$duration<=258.2]=1
+data$duration_group[data$duration>258.2]=2
+CrossTable(data$y, data$duration_group, prop.chisq = FALSE, prop.r = T, prop.c = T,
+           prop.t = F,chisq = T)
+
+#split data
+install.packages('caTools')
+library(caTools)
+train=campaign
+set.seed(88)
+split <- sample.split(train$y, SplitRatio = 0.7)
+dresstrain <- subset(train, split == TRUE)
+dresstest <- subset(train, split == FALSE)
+
+
+replicate=dresstrain[dresstrain$y=="yes",]
+dresstrain1=rbind(dresstrain,replicate)
+dresstrain2=rbind(dresstrain1,replicate)
+dresstrain3=rbind(dresstrain2,replicate)
+head(dresstrain3)
+length(dresstrain3$y)
+
+#logistic regression model
+model <- glm (y ~. , data = dresstrain, family = binomial)
+summary(model)
+
+predict <- predict(model, newdata=dresstest,type = 'response')
+head(predict)
+#confusion matrix
+confusion=as.data.frame(table(dresstest$y, predict > 0.5))
+confusion
+names(confusion)=c("actual","predicted","Freq")
+accuracy=(confusion$Freq[1]+confusion$Freq[4])/sum(confusion$Freq)
+accuracy
+recall=confusion$Freq[4]/(confusion$Freq[2]+confusion$Freq[4])
+recall
+precision=confusion$Freq[4]/(confusion$Freq[3]+confusion$Freq[4])
+precision
+trueNeg=confusion$Freq[1]/(confusion$Freq[1]+confusion$Freq[3])
+trueNeg
+
+#ROCR Curve
+install.packages("ROCR")
+library("ROCR")
+ROCRpred <- prediction(predict, dresstrain$y)
+ROCRperf <- performance(ROCRpred, 'tpr','fpr')
+plot(ROCRperf, colorize = TRUE, text.adj = c(-0.2,1.7))
+
+
+#random forest
+install.packages("randomForest")
+library("randomForest")
+
+model=randomForest(y~.,data=dresstrain)
+summary(model)
+
+model.pr = predict(model,type="prob",newdata=dresstest)[,2]
+head(model.pr)
+#confusion matrix
+confusion=as.data.frame(table(dresstest$y, model.pr>0.4))
+confusion
+names(confusion)=c("actual","predicted","Freq")
+accuracy=(confusion$Freq[1]+confusion$Freq[4])/sum(confusion$Freq)
+accuracy
+recall=confusion$Freq[4]/(confusion$Freq[2]+confusion$Freq[4])
+recall
+precision=confusion$Freq[4]/(confusion$Freq[3]+confusion$Freq[4])
+precision
+trueNeg=confusion$Freq[1]/(confusion$Freq[1]+confusion$Freq[3])
+trueNeg
+
+#ROC
+model.pr = predict(model,type="prob",newdata=dresstest)[,2]
+model.pred = prediction(model.pr, dresstest$y)
+model.perf = performance(model.pred,"tpr","fpr")
+plot(model.perf,main="ROC Curve for Random Forest",col=2,lwd=2)
+abline(a=0,b=1,lwd=2,lty=2,col="gray")
+
+
+importance=model$importance
+
+install.packages("data.table")
+library("data.table")
+
+setDT(as.data.frame(importance), keep.rownames = TRUE)[]
+importance1=setDT(as.data.frame(importance), keep.rownames = TRUE)[]
+importance2<-importance1[order(importance1$MeanDecreaseGini,decreasing=TRUE),]
+importance2
