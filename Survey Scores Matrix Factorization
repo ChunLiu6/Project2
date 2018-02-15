@@ -42,7 +42,7 @@ datatest=f5[27943:39917,]
 datatrain[1:15,]
 unique(datatrain$score)
 unique(datatest$score)
-unique(f4$score)
+unique(f5$score)
 
 
 #matrix factorization
@@ -51,22 +51,22 @@ install.packages("recosystem")
 library(recosystem)
 set.seed(12345)
 r=Reco()
-opts<-r$tune(data_memory(datatrain$System,
+opts<-r$tune(data_memory(datatrain$user,
 datatrain$q, rating=datatrain$score, index1=TRUE),
 opts=list(dim=c(5,10), lrate=c(0.05,0.1, 0.15),  
 niter=200, nfold=5, verbose=FALSE))
 
 opts$min
-r$train(data_memory(datatrain$System, 
+r$train(data_memory(datatrain$user, 
 datatrain$q, rating=datatrain$score, 
 index1=TRUE), opts=c(opts$min, nthread=1, niter=200))
 
 
 res <- r$output(out_memory(), out_memory())
 
-predMem=r$predict(data_memory(datatest$System,
+predMem=r$predict(data_memory(datatest$user,
 datatest$q, rating=NULL, index1=TRUE),out_memory())
 
-rmse=sqrt(mean((predMem-datatest$Rating)^2))
+rmse=sqrt(mean((predMem-datatest$score)^2))
 rmse
 
