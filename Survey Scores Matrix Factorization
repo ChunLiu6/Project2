@@ -1,0 +1,75 @@
+f1=read.csv("AllData_01.csv")
+
+head(f1)
+tail(f1)
+nrow(f1)
+
+
+head(f1)
+ncol(f1)
+nrow(f1)
+f2<-aggregate(f1$System,by=list(f1$System),FUN=length)
+f2
+f2$systemid=1:nrow(f2)
+for ( i in 1:nrow(f2)){
+f1$systemid[f1$System==f2$Group.1[i]]=i
+}
+head(f1)
+
+
+f3<-data.frame(x=rep(0,(ncol(f1)-1)*nrow(f1)))
+
+
+for ( j in 1:40){
+  for (i in 1:nrow(f1)){
+    f3$System[i+nrow(f1)*(j-1)]=f1$systemid[i]
+    f3$q[i+nrow(f1)*(j-1)]=j
+    if (is.na(f1[i,(j+1)])) {f3$score[i+nrow(f2)*(j-1)]=-999}
+    else {f3$score[i+nrow(f2)*(j-1)]=f1[i,(j+1)]}
+  }
+}
+
+head(f3)
+ 
+f4<-f3[f3$score!=-999,2:4]
+head(f4)
+f5<-f3[f3$score==-999,2:4]
+head(f5)
+f4[1:15,]
+nrow(f4)
+set.seed(12345)
+rn=runif(nrow(f4))
+f4$rn=rn
+f5<-f4[order(f4$rn,decreasing=TRUE),]
+head(f5)
+0.7*nrow(f5)
+datatrain=f5[1:27942,]
+datatest=f5[27943:39917,]
+datatrain[1:15,]
+unique(datatrain$score)
+unique(datatest$score)
+unique(f4$score)
+
+
+#matrix factorization
+
+install.packages("recosystem")
+library(recosystem)
+set.seed(12345)
+r=Reco()
+opts<-r$tune(data_memory(datatrain$System,
+datatrain$q, rating=datatrain$score, index1=TRUE),
+opts=list(dim=c(5,10), lrate=c(0.05,0.1, 0.15),  
+niter=200, nfold=5, verbose=FALSE))
+
+opts$min
+r$train(data_memory(datatrain$System, 
+datatrain$q, rating=datatrain$score, 
+index1=TRUE), opts=c(opts$min, nthread=1, niter=200))
+
+
+res <- r$output(out_memory(), out_memory())
+
+rmse=sqrt(mean((predMem-datatest$Rating)^2))
+rmse
+
