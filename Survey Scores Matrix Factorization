@@ -7,21 +7,16 @@ nrow(f1)
 
 ncol(f1)
 nrow(f1)
-f2<-aggregate(f1$System,by=list(f1$System),FUN=length)
-f2
-f2$systemid=1:nrow(f2)
-for ( i in 1:nrow(f2)){
-f1$systemid[f1$System==f2$Group.1[i]]=i
-}
+f1$id=1:nrow(f1)
+
 head(f1)
 
-
 f3<-data.frame(x=rep(0,(ncol(f1)-1)*nrow(f1)))
-
+head(f3)
 
 for ( j in 1:40){
   for (i in 1:nrow(f1)){
-    f3$System[i+nrow(f1)*(j-1)]=f1$systemid[i]
+    f3$user[i+nrow(f1)*(j-1)]=f1$id[i]
     f3$q[i+nrow(f1)*(j-1)]=j
     if (is.na(f1[i,(j+1)])) {f3$score[i+nrow(f2)*(j-1)]=-999}
     else {f3$score[i+nrow(f2)*(j-1)]=f1[i,(j+1)]}
@@ -29,7 +24,7 @@ for ( j in 1:40){
 }
 
 head(f3)
- 
+
 f4<-f3[f3$score!=-999,2:4]
 head(f4)
 f5<-f3[f3$score==-999,2:4]
