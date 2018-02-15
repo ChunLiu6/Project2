@@ -5,7 +5,6 @@ tail(f1)
 nrow(f1)
 
 
-head(f1)
 ncol(f1)
 nrow(f1)
 f2<-aggregate(f1$System,by=list(f1$System),FUN=length)
