@@ -69,6 +69,9 @@ index1=TRUE), opts=c(opts$min, nthread=1, niter=200))
 
 res <- r$output(out_memory(), out_memory())
 
+predMem=r$predict(data_memory(datatest$System,
+datatest$q, rating=NULL, index1=TRUE),out_memory())
+
 rmse=sqrt(mean((predMem-datatest$Rating)^2))
 rmse
 
