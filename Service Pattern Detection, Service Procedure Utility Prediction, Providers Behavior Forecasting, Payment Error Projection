@@ -90,8 +90,6 @@ corrplot(cor(temp))
 title(x$Group.1[14],line=2.5)
 
 
-#factor analysis
-
 head(f2)
 
 
@@ -111,20 +109,20 @@ plot(fit)
 
 unique(f1[,1])
 f3=""
-f3[f1[,1]=="Aqu"]=1
-f3[f1[,1]=="Cha"]=2
-f3[f1[,1]=="Gur"]=3
-f3[f1[,1]=="Kal"]=4
-f3[f1[,1]=="Kha"]=5
+f3[f1[,1]=="Aquino"]=1
+f3[f1[,1]=="Chanderraj"]=2
+f3[f1[,1]=="Gururaj"]=3
+f3[f1[,1]=="Kalla"]=4
+f3[f1[,1]=="Khan"]=5
 f3[f1[,1]=="Lee"]=6
-f3[f1[,1]=="Mal"]=7
-f3[f1[,1]=="Res"]=8
-f3[f1[,1]=="Rho"]=9
-f3[f1[,1]=="Sav"]=10
-f3[f1[,1]=="She"]=11
-f3[f1[,1]=="Tse"]=12
-f3[f1[,1]=="Uma"]=13
-f3[f1[,1]=="Val"]=14
+f3[f1[,1]=="Malhotra"]=7
+f3[f1[,1]=="Resh"]=8
+f3[f1[,1]=="Rhodes"]=9
+f3[f1[,1]=="Savran"]=10
+f3[f1[,1]=="Shehane"]=11
+f3[f1[,1]=="Tselikis"]=12
+f3[f1[,1]=="Umakanthan"]=13
+f3[f1[,1]=="Valencia"]=14
 head(f3)
 biplot(fit)
 colnames(fit$scores) = c("c81", "c83") 
@@ -132,8 +130,12 @@ biplot(fit$scores, fit$loadings, xlabs=f3,cex=c(0.75,0.6))
 abline(h=0) #add a horizontal line in the graph
 abline(v=0)
 
+
+
 #k means clustering
 
+
+head(f2)
 std_seg_data=f2[,4:16]
 head(std_seg_data)
 set.seed(1990)
@@ -142,6 +144,7 @@ codes
 cluster=codes$cluster
 kmeans_summary <- aggregate(std_seg_data,by=list(codes$cluster),FUN=mean)
 kmeans_summary
+
 
 
 
@@ -188,29 +191,26 @@ head(f4)
 summary(f4$dateTime)
 summary(f4$average_score)
 unique(f4$tab)
-plot(f4$dateTime[f4$tab=="Aqu"],f4$average_score[f4$tab=="Aqu"],type="l",
+plot(f4$dateTime[f4$tab=="Aqu"],f4$average_score[f4$tab=="Aquino"],type="l",
 main="Time series of each physician starting from 2012-09-01",xlab="time",ylab="score",ylim=c(0,2),
 xlim=c(as.POSIXct(strptime("2012-09-01","%Y-%m-%d")),as.POSIXct(strptime("2013-05-15","%Y-%m-%d"))))
-lines(f4$dateTime[f4$tab=="Cha"],f4$average_score[f4$tab=="Cha"],col="red")
-lines(f4$dateTime[f4$tab=="Gur"],f4$average_score[f4$tab=="Gur"],col="red")
-lines(f4$dateTime[f4$tab=="Kal"],f4$average_score[f4$tab=="Kal"],col="red")
-lines(f4$dateTime[f4$tab=="Kha"],f4$average_score[f4$tab=="Kha"],col="red")
+lines(f4$dateTime[f4$tab=="Cha"],f4$average_score[f4$tab=="Chanderraj"],col="red")
+lines(f4$dateTime[f4$tab=="Gur"],f4$average_score[f4$tab=="Gururaj"],col="red")
+lines(f4$dateTime[f4$tab=="Kal"],f4$average_score[f4$tab=="Kalla"],col="red")
+lines(f4$dateTime[f4$tab=="Kha"],f4$average_score[f4$tab=="Khan"],col="red")
 lines(f4$dateTime[f4$tab=="Lee"],f4$average_score[f4$tab=="Lee"],col="red")
-lines(f4$dateTime[f4$tab=="Mal"],f4$average_score[f4$tab=="Mal],col="orange")
-lines(f4$dateTime[f4$tab=="Res"],f4$average_score[f4$tab=="Res"],col="green")
-lines(f4$dateTime[f4$tab=="Rho"],f4$average_score[f4$tab=="Rho"],col="green")
-lines(f4$dateTime[f4$tab=="Sav"],f4$average_score[f4$tab=="Sav"],col="blue")
-lines(f4$dateTime[f4$tab=="She"],f4$average_score[f4$tab=="She"],col="purple")
-lines(f4$dateTime[f4$tab=="Tse"],f4$average_score[f4$tab=="Tse"],col="purple")
-lines(f4$dateTime[f4$tab=="Uma"],f4$average_score[f4$tab=="Uma"],col="cyan3")
-lines(f4$dateTime[f4$tab=="Val"],f4$average_score[f4$tab=="Val"],col="darkred")
+lines(f4$dateTime[f4$tab=="Mal"],f4$average_score[f4$tab=="Malhotra"],col="orange")
+lines(f4$dateTime[f4$tab=="Res"],f4$average_score[f4$tab=="Resh"],col="green")
+lines(f4$dateTime[f4$tab=="Rho"],f4$average_score[f4$tab=="Rhodes"],col="green")
+lines(f4$dateTime[f4$tab=="Sav"],f4$average_score[f4$tab=="Savran"],col="blue")
+lines(f4$dateTime[f4$tab=="She"],f4$average_score[f4$tab=="Shehane"],col="purple")
+lines(f4$dateTime[f4$tab=="Tse"],f4$average_score[f4$tab=="Tselikis"],col="purple")
+lines(f4$dateTime[f4$tab=="Uma"],f4$average_score[f4$tab=="Umakanthan"],col="cyan3")
+lines(f4$dateTime[f4$tab=="Val"],f4$average_score[f4$tab=="Valencia"],col="darkred")
 
 
 
-
-#arima model for time series
-
-
+#arima
 
 
 f7<-aggregate(f2$payment.rate.base,by=list(f2$dateTime),FUN=mean)
@@ -269,7 +269,10 @@ abline(h=1,col="red")
 
 
 
-#procedure utility billing prediction
+
+
+#linear regression
+
 
 
 
@@ -309,6 +312,7 @@ head(f13)
 nrow(f13)
 
 
+
 #for each physician
 
 result=list()
@@ -341,96 +345,64 @@ model_lm<-function(data)
       sse=sum((f16$Sum.of.Amt.Billed-predict)^2)
       r2=ssr/(ssr+sse)
       residuals=f16$Sum.of.Amt.Billed-predict
+      result[[2]]=residuals
       par(mfrow=c(3,1))
       plot(residuals)
       hist(residuals)
       boxplot(residuals)
       significant=names(which(summary_model$coefficients[,4]<0.05))
-      result[[2]]=significant
+      result[[3]]=significant
+      summary_feature=summary_model$coefficients[2:nrow(summary_model$coefficients),]
+      max_utility=max(summary_feature[summary_feature[,4]<0.05,1])
+      max_utility_feature=names(which(summary_feature[,1]==max_utility))      
+      result[[4]]=max_utility_feature
+      result[[5]]=max_utility
     }
   }
 result
 }
 tab<-unique(f13$tab)
 tab
-
+data=f13[f13$tab==tab[3],]
 result_Aqu =model_lm(f13[f13$tab==tab[1],])
-#X83891        714.818
-
 result_Cha = model_lm(f13[f13$tab==tab[2],])
-#(Intercept) 4.280e+03
-#X81225      2.210e+03
-
 result_Gur = model_lm(f13[f13$tab==tab[3],])
-#X83891        714.818
-
 result_Kal = model_lm(f13[f13$tab==tab[4],])
-#X81227        3647.94
-#X81401         934.24
-#date           -61.24
-
 result_Kha = model_lm(f13[f13$tab==tab[5],])
-#(Intercept)  5.750e+02
-#X81225       8.188e+02
-#X81226       3.548e+03
-#X81355      -1.357e-12
-#X81401       7.745e+02
-#X83891       6.175e+02
-
 result_Lee = model_lm(f13[f13$tab==tab[6],])
-#X83891       714.818
-
-
 result_Mal = model_lm(f13[f13$tab==tab[7],])   
-#X81225       6.518e+03
-#X83891       7.137e+02
-
-
-result_Res = model_lm(f13[f13$tab==tab[8],])
-#(Intercept)  790.4666
-#X81226      1379.9895
-#X81227      2390.6733
-#X83891       711.1279
-#month        -72.0912
-   
-result_Rho = model_lm(f13[f13$tab==tab[9],]) 
-#(Intercept)  4.280e+03
-
-  
+result_Res = model_lm(f13[f13$tab==tab[8],]) 
+result_Rho = model_lm(f13[f13$tab==tab[9],])  
 result_Sav = model_lm(f13[f13$tab==tab[10],])   
-#(Intercept) -4.562e+06
-#X81225      -1.246e+03
-#X81226       9.845e+02
-#X81227       1.679e+03
-#X81401       5.315e+02
-#X83891       7.112e+02
-#year         2.268e+03
-
 result_She = model_lm(f13[f13$tab==tab[11],])   
-#(Intercept)  1.670e+07
-#X81225       2.026e+03
-#X81227       1.168e+03
-#X81401       9.852e+02 
-#X83891       6.057e+02
-#month       -6.621e+02
-#date        -1.963e+01
-#year        -8.294e+03
-
 result_Tse = model_lm(f13[f13$tab==tab[12],])   
-#X83891        721.929
-
-
 result_Uma = model_lm(f13[f13$tab==tab[13],]) 
-#(Intercept)  6.878e+06 
-#X81225       1.434e+03
-#X81355       2.064e+03
-#X81401       1.047e+03
-#X83891       7.001e+02
-#month       -1.224e+02
-#year        -3.418e+03
-  
 result_Val = model_lm(f13[f13$tab==tab[14],])   
-#X81225       7359.525
-#X81227       3735.905
-#X81401      -4124.862
-#X83891        715.190
+
+tab
+length(tab)
+
+uti=data.frame(feature=rep(0,length(tab)),coef=rep(0,length(tab)))
+class(uti$feature)
+class(rep("a",length(tab)))
+class(uti$coef)
+
+utility<-function(tab)
+
+{
+  for ( i in 1:length(tab))
+  { 
+    if (nrow(f13[f13$tab==tab[i],])>5)
+    {
+        result=model_lm(f13[f13$tab==tab[i],])
+        if (result[[5]]>0)
+        {
+          uti$feature[i]=result[[4]]
+          uti$coef[i]=result[[5]]
+        }
+    }
+   }
+uti
+}
+max_utility=utility(tab)
+
