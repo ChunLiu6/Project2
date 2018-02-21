@@ -132,6 +132,17 @@ biplot(fit$scores, fit$loadings, xlabs=f3,cex=c(0.75,0.6))
 abline(h=0) #add a horizontal line in the graph
 abline(v=0)
 
+#k means clustering
+
+std_seg_data=f2[,4:16]
+head(std_seg_data)
+set.seed(1990)
+codes <-kmeans(std_seg_data, 3, iter.max=100,nstart=100)
+codes
+cluster=codes$cluster
+kmeans_summary <- aggregate(std_seg_data,by=list(codes$cluster),FUN=mean)
+kmeans_summary
+
 
 
 #visualize time series
