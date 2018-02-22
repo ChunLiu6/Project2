@@ -117,20 +117,20 @@ plot(fit)
 
 unique(f1[,1])
 f3=""
-f3[f1[,1]=="Aquino"]=1
-f3[f1[,1]=="Chanderraj"]=2
-f3[f1[,1]=="Gururaj"]=3
-f3[f1[,1]=="Kalla"]=4
-f3[f1[,1]=="Khan"]=5
+f3[f1[,1]=="Aqu"]=1
+f3[f1[,1]=="Cha"]=2
+f3[f1[,1]=="Gur"]=3
+f3[f1[,1]=="Kal"]=4
+f3[f1[,1]=="Kha"]=5
 f3[f1[,1]=="Lee"]=6
-f3[f1[,1]=="Malhotra"]=7
-f3[f1[,1]=="Resh"]=8
-f3[f1[,1]=="Rhodes"]=9
-f3[f1[,1]=="Savran"]=10
-f3[f1[,1]=="Shehane"]=11
-f3[f1[,1]=="Tselikis"]=12
-f3[f1[,1]=="Umakanthan"]=13
-f3[f1[,1]=="Valencia"]=14
+f3[f1[,1]=="Mal"]=7
+f3[f1[,1]=="Res"]=8
+f3[f1[,1]=="Rho"]=9
+f3[f1[,1]=="Sav"]=10
+f3[f1[,1]=="She"]=11
+f3[f1[,1]=="Tse"]=12
+f3[f1[,1]=="Uma"]=13
+f3[f1[,1]=="Val"]=14
 head(f3)
 biplot(fit)
 colnames(fit$scores) = c("c81", "c83") 
