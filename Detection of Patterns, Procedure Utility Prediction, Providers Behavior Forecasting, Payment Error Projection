@@ -189,9 +189,9 @@ forecast1=forecast(model,h=84-79+3)
 fore=forecast1$mean
 fore
 y=f8$average_score[80:84]
-plot(y-fore,ylim=c(-1,1))
-abline(h=1.96*sqrt(model$sigma2),col="blue")
-abline(h=-1.96*sqrt(model$sigma2),col="blue")
+#plot(y-fore,ylim=c(-1,1))
+#abline(h=1.96*sqrt(model$sigma2),col="blue")
+#abline(h=-1.96*sqrt(model$sigma2),col="blue")
 plot(ts(f8$average_score),type="l")
 plot(forecast1)
 lines(x=seq(80,84),y=f8$average_score[80:84],col="red")
