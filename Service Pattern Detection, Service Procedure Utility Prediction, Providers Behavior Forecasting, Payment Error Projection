@@ -11,6 +11,16 @@ head(f1[f1$tab==x$Group.1[1],][4:16])
 install.packages("corrplot")
 library("corrplot")
 
+windows()
+for ( i in 1:length(x$Group.1)){
+temp=f1[f1$tab==x$Group.1[i],][4:16]
+temp
+corrplot(cor(temp))
+title(x$Group.1[i],line=2.5)
+
+}
+
+
 temp=f1[f1$tab==x$Group.1[1],][4:16]
 temp
 corrplot(cor(temp))
