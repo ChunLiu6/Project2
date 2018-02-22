@@ -19,87 +19,6 @@ title(x$Group.1[i],line=2.5)
 }
 
 
-temp=f1[f1$tab==x$Group.1[1],][4:16]
-temp
-corrplot(cor(temp))
-title(x$Group.1[1],line=2.5)
-
-temp=f1[f1$tab==x$Group.1[2],][4:16]
-temp
-corrplot(cor(temp))
-title(x$Group.1[2],line=2.5)
-
-temp=f1[f1$tab==x$Group.1[3],][4:16]
-temp
-corrplot(cor(temp))
-title(x$Group.1[3],line=2.5)
-
-temp=f1[f1$tab==x$Group.1[4],][4:16]
-temp
-corrplot(cor(temp))
-title(x$Group.1[4],line=2.5)
-
-
-temp=f1[f1$tab==x$Group.1[5],][4:16]
-temp
-corrplot(cor(temp))
-title(x$Group.1[5],line=2.5)
-
-
-temp=f1[f1$tab==x$Group.1[6],][4:16]
-temp
-corrplot(cor(temp))
-title(x$Group.1[6],line=2.5)
-
-
-temp=f1[f1$tab==x$Group.1[7],][4:16]
-temp
-corrplot(cor(temp))
-title(x$Group.1[7],line=2.5)
-
-
-temp=f1[f1$tab==x$Group.1[8],][4:16]
-temp
-corrplot(cor(temp))
-title(x$Group.1[8],line=2.5)
-
-
-temp=f1[f1$tab==x$Group.1[9],][4:16]
-temp
-corrplot(cor(temp))
-title(x$Group.1[9],line=2.5)
-
-
-temp=f1[f1$tab==x$Group.1[10],][4:16]
-temp
-corrplot(cor(temp))
-title(x$Group.1[10],line=2.5)
-
-temp=f1[f1$tab==x$Group.1[11],][4:16]
-temp
-corrplot(cor(temp))
-title(x$Group.1[11],line=2.5)
-
-
-temp=f1[f1$tab==x$Group.1[12],][4:16]
-temp
-corrplot(cor(temp))
-title(x$Group.1[12],line=2.5)
-
-
-temp=f1[f1$tab==x$Group.1[13],][4:16]
-temp
-corrplot(cor(temp))
-title(x$Group.1[13],line=2.5)
-
-temp=f1[f1$tab==x$Group.1[14],][4:16]
-temp
-corrplot(cor(temp))
-title(x$Group.1[14],line=2.5)
-
-
-head(f2)
-
 
 install.packages("nFactors")
 library("nFactors")
@@ -138,20 +57,6 @@ biplot(fit$scores, fit$loadings, xlabs=f3,cex=c(0.75,0.6))
 abline(h=0) #add a horizontal line in the graph
 abline(v=0)
 
-
-
-#k means clustering
-
-
-head(f2)
-std_seg_data=f2[,4:16]
-head(std_seg_data)
-set.seed(1990)
-codes <-kmeans(std_seg_data, 3, iter.max=100,nstart=100)
-codes
-cluster=codes$cluster
-kmeans_summary <- aggregate(std_seg_data,by=list(codes$cluster),FUN=mean)
-kmeans_summary
 
 
 
@@ -215,6 +120,26 @@ lines(f4$dateTime[f4$tab=="She"],f4$average_score[f4$tab=="Shehane"],col="purple
 lines(f4$dateTime[f4$tab=="Tse"],f4$average_score[f4$tab=="Tselikis"],col="purple")
 lines(f4$dateTime[f4$tab=="Uma"],f4$average_score[f4$tab=="Umakanthan"],col="cyan3")
 lines(f4$dateTime[f4$tab=="Val"],f4$average_score[f4$tab=="Valencia"],col="darkred")
+
+
+
+
+
+#k means clustering
+
+
+head(f2)
+std_seg_data=f2[,4:16]
+head(std_seg_data)
+set.seed(1990)
+codes <-kmeans(std_seg_data, 3, iter.max=100,nstart=100)
+codes
+cluster=codes$cluster
+kmeans_summary <- aggregate(std_seg_data,by=list(codes$cluster),FUN=mean)
+kmeans_summary
+
+
+
 
 
 
