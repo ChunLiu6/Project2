@@ -1,0 +1,210 @@
+#Form_NewRecords
+
+Option Compare Database
+
+Private Sub Command2_Click()
+
+Dim SQLAppend As String
+
+
+
+SQLAppend = "Insert Into AllData_T " & _
+" (System, Source,[Email Address],[IP Address],[Date Started],[Time Started], " & _
+" Duration, Status, Facility, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, " & _
+" q12, q13, q14, q15, q16, q17, q18, q19, q20, q21, q22, q23, q24, q25, q26, q27, q28, q29, q30) " & _
+" Select System, Source,[Email Address],[IP Address],[Date Started],[Time Started], " & _
+" Duration, Status, Facility, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, " & _
+" q12, q13, q14, q15, q16, q17, q18, q19, q20, q21, q22, q23, q24, q25, q26, q27, q28, q29, q30 From NewRecords;"
+
+
+DoCmd.RunSQL SQLAppend
+
+
+End Sub
+
+Private Sub Command3_Click()
+
+Dim SQLDelete As String
+
+
+
+
+
+SQLDelete = "Delete From AllData_T Where System = NewRecords.System ; "
+
+DoCmd.RunSQL SQLDelete
+
+End Sub
+
+
+
+
+
+#Form_ParentCompanyName
+
+Option Compare Database
+
+Private Sub Command9_Click()
+
+Dim Q As QueryDef
+Dim DB As Database
+Dim Criteria As String
+Dim ctl As Object
+Dim Itm As Variant
+
+'Build a list of the selections.
+Set ctl = Form_ParentCompanyName![List7]
+
+For Each Itm In ctl.ItemsSelected
+If Len(Criteria) = 0 Then
+Criteria = Chr(34) & ctl.ItemData(Itm) & Chr(34)
+Else
+Criteria = Criteria & "," & Chr(34) & ctl.ItemData(Itm) & Chr(34)
+End If
+Next Itm
+If Len(Criteria) = 0 Then
+Itm = MsgBox("You must select one or more items in the" & "List Box", 0, "No Selection Made")
+Exit Sub
+End If
+'Modify the Query.
+Set DB = CurrentDb()
+Set Q = DB.QueryDefs("project_MultiParentCompanies")
+Q.SQL = "Select * From AllData_T Where [System] In (" & Criteria & ");"
+Q.Close
+'Run the query.
+DoCmd.OpenQuery "project_MultiParentCompanies"
+
+
+End Sub
+
+
+#Form_OrganizationName
+
+Option Compare Database
+
+Private Sub Command4_Click()
+
+Dim Q As QueryDef
+Dim DB As Database
+Dim Criteria_ParentCompany As String
+Dim Criteria_Facility As String
+Dim ctl As Object
+Dim Itm As Variant
+
+
+'Build a list of the selections.
+Set ctl = Form_OrganizationName![List9]
+
+For Each Itm In ctl.ItemsSelected
+If Len(Criteria_ParentCompany) = 0 Then
+Criteria_ParentCompany = Chr(34) & ctl.ItemData(Itm) & Chr(34)
+Else
+Criteria_ParentCompany = Criteria_ParentCompany & "," & Chr(34) & ctl.ItemData(Itm) & Chr(34)
+End If
+Next Itm
+If Len(Criteria_ParentCompany) = 0 Then
+Itm = MsgBox("You must select one or more items in the" & "List Box", 0, "No Selection Made")
+Exit Sub
+End If
+
+'Build a list of the selections.
+Set ctl = Form_OrganizationName![List0]
+
+For Each Itm In ctl.ItemsSelected
+If Len(Criteria_Facility) = 0 Then
+Criteria_Facility = Chr(34) & ctl.ItemData(Itm) & Chr(34)
+Else
+Criteria_Facility = Criteria_Facility & "," & Chr(34) & ctl.ItemData(Itm) & Chr(34)
+End If
+Next Itm
+If Len(Criteria_Facility) = 0 Then
+Itm = MsgBox("You must select one or more items in the" & "List Box", 0, "No Selection Made")
+Exit Sub
+End If
+'Modify the Query.
+Set DB = CurrentDb()
+Set Q = DB.QueryDefs("project_MultiFacilities")
+Q.SQL = "Select * From AllData_T Where [System] in (" & Criteria_ParentCompany & ") and [Facility] In (" & Criteria_Facility & ");"
+Q.Close
+'Run the query.
+DoCmd.OpenQuery "project_MultiFacilities"
+
+End Sub
+
+
+
+#Scoring Performance Analysis
+
+
+f1=read.csv("AllData_01.csv")
+
+head(f1)
+tail(f1)
+nrow(f1)
+
+
+ncol(f1)
+nrow(f1)
+f1$id=1:nrow(f1)
+
+head(f1)
+
+f3<-data.frame(x=rep(0,(ncol(f1)-1)*nrow(f1)))
+head(f3)
+
+for ( j in 1:40){
+  for (i in 1:nrow(f1)){
+    f3$user[i+nrow(f1)*(j-1)]=f1$id[i]
+    f3$q[i+nrow(f1)*(j-1)]=j
+    if (is.na(f1[i,(j+1)])) {f3$score[i+nrow(f2)*(j-1)]=-999}
+    else {f3$score[i+nrow(f2)*(j-1)]=f1[i,(j+1)]}
+  }
+}
+
+head(f3)
+
+f4<-f3[f3$score!=-999,2:4]
+head(f4)
+f5<-f3[f3$score==-999,2:4]
+head(f5)
+f4[1:15,]
+nrow(f4)
+set.seed(12345)
+rn=runif(nrow(f4))
+f4$rn=rn
+f5<-f4[order(f4$rn,decreasing=TRUE),]
+head(f5)
+0.7*nrow(f5)
+datatrain=f5[1:27942,]
+datatest=f5[27943:39917,]
+datatrain[1:15,]
+unique(datatrain$score)
+unique(datatest$score)
+unique(f5$score)
+
+
+#matrix factorization
+
+install.packages("recosystem")
+library(recosystem)
+set.seed(12345)
+r=Reco()
+opts<-r$tune(data_memory(datatrain$user,
+datatrain$q, rating=datatrain$score, index1=TRUE),
+opts=list(dim=c(5,10), lrate=c(0.05,0.1, 0.15),  
+niter=200, nfold=5, verbose=FALSE))
+
+opts$min
+r$train(data_memory(datatrain$user, 
+datatrain$q, rating=datatrain$score, 
+index1=TRUE), opts=c(opts$min, nthread=1, niter=200))
+
+
+res <- r$output(out_memory(), out_memory())
+
+predMem=r$predict(data_memory(datatest$user,
+datatest$q, rating=NULL, index1=TRUE),out_memory())
+
+rmse=sqrt(mean((predMem-datatest$score)^2))
+rmse
+
