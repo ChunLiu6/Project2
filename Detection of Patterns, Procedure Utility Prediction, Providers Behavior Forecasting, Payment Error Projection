@@ -312,8 +312,6 @@ result_Tse = model_lm(f13[f13$tab==tab[12],])
 result_Uma = model_lm(f13[f13$tab==tab[13],]) 
 result_Val = model_lm(f13[f13$tab==tab[14],])   
 
-tab
-length(tab)
 
 uti=data.frame(feature=rep(0,length(tab)),coef=rep(0,length(tab)))
 class(uti$feature)
