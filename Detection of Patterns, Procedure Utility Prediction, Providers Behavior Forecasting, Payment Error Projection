@@ -294,9 +294,8 @@ model_lm<-function(data)
   }
 result
 }
+
 tab<-unique(f13$tab)
-tab
-data=f13[f13$tab==tab[3],]
 result_Aqu =model_lm(f13[f13$tab==tab[1],])
 result_Cha = model_lm(f13[f13$tab==tab[2],])
 result_Gur = model_lm(f13[f13$tab==tab[3],])
