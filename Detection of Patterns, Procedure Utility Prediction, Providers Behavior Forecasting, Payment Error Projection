@@ -1,62 +1,25 @@
-f1<-read.csv("gene.csv")
+f1<-read.csv("nmtc.csv")
 head(f1)
 
 #correlation matrix
 
 
 x=aggregate(f1$tab,by=list(f1$tab),FUN=length)
+x
 head(f1[f1$tab==x$Group.1[1],][4:16])
 
 install.packages("corrplot")
 library("corrplot")
 
+
 windows()
 for ( i in 1:length(x$Group.1)){
 temp=f1[f1$tab==x$Group.1[i],][4:16]
+temp
 corrplot(cor(temp))
 title(x$Group.1[i],line=2.5)
 
 }
-
-
-
-install.packages("nFactors")
-library("nFactors")
-
-
-nScree(f1[4:16], cor=TRUE)
-
-
-fit <- principal(f1[4:16],nfactors=2, rotate="varimax",scores=TRUE)
-fit
-fit$values
-plot(fit)
-
-
-
-unique(f1[,1])
-f3=""
-f3[f1[,1]=="Aqu"]=1
-f3[f1[,1]=="Cha"]=2
-f3[f1[,1]=="Gur"]=3
-f3[f1[,1]=="Kal"]=4
-f3[f1[,1]=="Kha"]=5
-f3[f1[,1]=="Lee"]=6
-f3[f1[,1]=="Mal"]=7
-f3[f1[,1]=="Res"]=8
-f3[f1[,1]=="Rho"]=9
-f3[f1[,1]=="Sav"]=10
-f3[f1[,1]=="She"]=11
-f3[f1[,1]=="Tse"]=12
-f3[f1[,1]=="Uma"]=13
-f3[f1[,1]=="Val"]=14
-head(f3)
-biplot(fit)
-colnames(fit$scores) = c("c81", "c83") 
-biplot(fit$scores, fit$loadings, xlabs=f3,cex=c(0.75,0.6)) 
-abline(h=0) #add a horizontal line in the graph
-abline(v=0)
-
 
 
 
@@ -104,10 +67,10 @@ head(f4)
 summary(f4$dateTime)
 summary(f4$average_score)
 unique(f4$tab)
-plot(f4$dateTime[f4$tab=="Aqu"],f4$average_score[f4$tab=="Aquino"],type="l",
+plot(f4$dateTime[f4$tab=="Aqu"],f4$average_score[f4$tab=="Aqu"],type="l",
 main="Time series of each physician starting from 2012-09-01",xlab="time",ylab="score",ylim=c(0,2),
 xlim=c(as.POSIXct(strptime("2012-09-01","%Y-%m-%d")),as.POSIXct(strptime("2013-05-15","%Y-%m-%d"))))
-lines(f4$dateTime[f4$tab=="Cha"],f4$average_score[f4$tab=="Chan"],col="red")
+lines(f4$dateTime[f4$tab=="Cha"],f4$average_score[f4$tab=="Cha"],col="red")
 lines(f4$dateTime[f4$tab=="Gur"],f4$average_score[f4$tab=="Gur"],col="aquamarine3")
 lines(f4$dateTime[f4$tab=="Kal"],f4$average_score[f4$tab=="Kal"],col="azure4")
 lines(f4$dateTime[f4$tab=="Kha"],f4$average_score[f4$tab=="Kha"],col="bisque3")
@@ -124,26 +87,8 @@ lines(f4$dateTime[f4$tab=="Val"],f4$average_score[f4$tab=="Val"],col="darkred")
 
 
 
+#arima model
 
-#k means clustering
-
-
-head(f2)
-std_seg_data=f2[,4:16]
-head(std_seg_data)
-set.seed(1990)
-codes <-kmeans(std_seg_data, 3, iter.max=100,nstart=100)
-codes
-cluster=codes$cluster
-kmeans_summary <- aggregate(std_seg_data,by=list(codes$cluster),FUN=mean)
-kmeans_summary
-
-
-
-
-
-
-#arima
 
 
 f7<-aggregate(f2$payment.rate.base,by=list(f2$dateTime),FUN=mean)
@@ -189,9 +134,9 @@ forecast1=forecast(model,h=84-79+3)
 fore=forecast1$mean
 fore
 y=f8$average_score[80:84]
-#plot(y-fore,ylim=c(-1,1))
-#abline(h=1.96*sqrt(model$sigma2),col="blue")
-#abline(h=-1.96*sqrt(model$sigma2),col="blue")
+plot(y-fore,ylim=c(-1,1))
+abline(h=1.96*sqrt(model$sigma2),col="blue")
+abline(h=-1.96*sqrt(model$sigma2),col="blue")
 plot(ts(f8$average_score),type="l")
 plot(forecast1)
 lines(x=seq(80,84),y=f8$average_score[80:84],col="red")
@@ -202,11 +147,7 @@ abline(h=1,col="red")
 
 
 
-
-
-#linear regression
-
-
+#linear regression model for amount billed per visit
 
 
 
@@ -218,31 +159,21 @@ sum(is.na(f12$Sum.of.Amt.Billed)==TRUE)
 
 head(f2)
 nrow(f2)
-month1=as.numeric(month)
-head(month1)
-head(f2$month)
-date1=as.numeric(date)
-head(date1)
-head(date)
-year1=as.numeric(year)
-head(year1)
-head(year)
+
 
 head(f2)
-f13<-cbind(f2[1:16],f2[22:24],f12[4])
+f13<-cbind(f2[1:16],f12[4])
 head(f13)
 
-class(f13$month)
-class(f13$date)
-class(f13$year)
-f13$month=month1
-f13$date=date1
-f13$year=year1
 
-f13<-f13[f13$year!=1964,]
+f13<-f13[f2$year!=1964,]
 sum(is.na(f13$Sum.of.Amt.Billed)==TRUE)
 head(f13)
 nrow(f13)
+
+
+f13[,4:16]=scale(f13[,4:16])
+head(f13)
 
 
 
@@ -250,6 +181,8 @@ nrow(f13)
 
 result=list()
 head(data)
+
+
 model_lm<-function(data)
 
 {
@@ -260,15 +193,15 @@ model_lm<-function(data)
   data2$rn=NULL
   sum(is.na(data2$Sum.of.Amt.Billed)==TRUE)
   nrow(data2)
-  n1=ceiling(0.75*nrow(data))
+  n1=ceiling(0.7*nrow(data))
   f15<-data2[1:n1,]
   f16<-data2[(n1+1):nrow(data2),]
-  if (sum(is.na(f15$Sum.of.Amt.Billed)==TRUE)==0 & 
+  if (nrow(f15)>5 & nrow(f16)>5 & sum(is.na(f15$Sum.of.Amt.Billed)==TRUE)==0 & 
     sum(is.na(f16$Sum.of.Amt.Billed)==TRUE)==0)
 
   {
 
-    model=lm(Sum.of.Amt.Billed~.,data=f15[4:ncol(f15)])
+    model=lm(Sum.of.Amt.Billed~.+0,data=f15[4:ncol(f15)])
     summary_model=summary(model)
     result[[1]]=summary_model
     predict=predict(model,newdata=f16)
@@ -277,17 +210,17 @@ model_lm<-function(data)
       ssr=sum((predict-mean(f16$Sum.of.Amt.Billed))^2)
       sse=sum((f16$Sum.of.Amt.Billed-predict)^2)
       r2=ssr/(ssr+sse)
+      result[[2]]=r2
       residuals=f16$Sum.of.Amt.Billed-predict
-      result[[2]]=residuals
       par(mfrow=c(3,1))
       plot(residuals)
       hist(residuals)
       boxplot(residuals)
-      significant=names(which(summary_model$coefficients[,4]<0.05))
+      significant=summary_model$coefficients[which(summary_model$coefficients[,4]<0.05),]
       result[[3]]=significant
-      summary_feature=summary_model$coefficients[2:nrow(summary_model$coefficients),]
+      summary_feature=summary_model$coefficients
       max_utility=max(summary_feature[summary_feature[,4]<0.05,1])
-      max_utility_feature=names(which(summary_feature[,1]==max_utility))      
+      max_utility_feature=rownames(summary_feature)[summary_feature[,1]==max_utility]     
       result[[4]]=max_utility_feature
       result[[5]]=max_utility
     }
@@ -295,44 +228,92 @@ model_lm<-function(data)
 result
 }
 
-tab<-unique(f13$tab)
-result_Aqu =model_lm(f13[f13$tab==tab[1],])
-result_Cha = model_lm(f13[f13$tab==tab[2],])
-result_Gur = model_lm(f13[f13$tab==tab[3],])
-result_Kal = model_lm(f13[f13$tab==tab[4],])
-result_Kha = model_lm(f13[f13$tab==tab[5],])
-result_Lee = model_lm(f13[f13$tab==tab[6],])
-result_Mal = model_lm(f13[f13$tab==tab[7],])   
-result_Res = model_lm(f13[f13$tab==tab[8],]) 
-result_Rho = model_lm(f13[f13$tab==tab[9],])  
-result_Sav = model_lm(f13[f13$tab==tab[10],])   
-result_She = model_lm(f13[f13$tab==tab[11],])   
-result_Tse = model_lm(f13[f13$tab==tab[12],])   
-result_Uma = model_lm(f13[f13$tab==tab[13],]) 
-result_Val = model_lm(f13[f13$tab==tab[14],])   
+
+tab=unique(f13$tab)
 
 
 uti=data.frame(feature=rep(0,length(tab)),coef=rep(0,length(tab)))
+uti_model=list()
 class(uti$feature)
 class(rep("a",length(tab)))
 class(uti$coef)
 
-utility<-function(tab)
+
+utility<-function(data)
 
 {
-  for ( i in 1:length(tab))
+  for ( i in 1:length(unique(data$tab)))
   { 
-    if (nrow(f13[f13$tab==tab[i],])>5)
+    if (nrow(data[data$tab==tab[i],])>5)
     {
-        result=model_lm(f13[f13$tab==tab[i],])
+        result=model_lm(data[data$tab==tab[i],])
         if (result[[5]]>0)
         {
           uti$feature[i]=result[[4]]
           uti$coef[i]=result[[5]]
+          uti_model[[i]]=result
         }
     }
    }
-uti
+print(uti)
+uti_model
 }
-max_utility=utility(tab)
 
+
+max_utility=utility(f13)
+max_utility
+
+
+
+
+
+#k means clustering
+
+
+
+
+std_seg_data=f13[4:16]
+head(std_seg_data)
+set.seed(1990)
+codes <-kmeans(std_seg_data, 3, iter.max=100,nstart=100)
+codes
+cluster=codes$cluster
+kmeans_summary <- aggregate(std_seg_data,by=list(codes$cluster),FUN=mean)
+kmeans_summary
+head(cluster)
+length(cluster)
+
+f14<-f13
+f14$cluster<-cluster
+
+head(f14)
+
+
+install.packages("nFactors")
+library("nFactors")
+
+
+
+
+nScree(f1[4:16], cor=TRUE)
+
+
+fit <- principal(f2,nfactors=2, rotate="varimax",scores=TRUE)
+fit
+fit$values
+plot(fit)
+
+
+
+unique(f1[,1])
+f3=""
+
+for ( i in 1:length(tab))
+{f3[f1[,1]==tab[i]]=i}
+
+head(f3)
+biplot(fit)
+colnames(fit$scores) = c("c81", "c83") 
+biplot(fit$scores, fit$loadings, xlabs=f3,cex=c(0.75,0.6)) 
+abline(h=0) #add a horizontal line in the graph
+abline(v=0)
