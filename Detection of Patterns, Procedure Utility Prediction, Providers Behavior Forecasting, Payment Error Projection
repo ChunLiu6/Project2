@@ -1,4 +1,4 @@
-f1<-read.csv("nmtc.csv")
+f1<-read.csv("gene.csv")
 head(f1)
 
 #correlation matrix
@@ -85,9 +85,7 @@ lines(f4$dateTime[f4$tab=="Uma"],f4$average_score[f4$tab=="Uma"],col="cyan3")
 lines(f4$dateTime[f4$tab=="Val"],f4$average_score[f4$tab=="Val"],col="darkred")
 
 
-
-
-#arima model
+#arima
 
 
 
@@ -147,7 +145,7 @@ abline(h=1,col="red")
 
 
 
-#linear regression model for amount billed per visit
+#amount billed per visit
 
 
 
@@ -171,16 +169,16 @@ sum(is.na(f13$Sum.of.Amt.Billed)==TRUE)
 head(f13)
 nrow(f13)
 
-
 f13[,4:16]=scale(f13[,4:16])
 head(f13)
+ncol(f13)
+
 
 
 
 #for each physician
 
 result=list()
-head(data)
 
 
 model_lm<-function(data)
@@ -196,7 +194,7 @@ model_lm<-function(data)
   n1=ceiling(0.7*nrow(data))
   f15<-data2[1:n1,]
   f16<-data2[(n1+1):nrow(data2),]
-  if (nrow(f15)>5 & nrow(f16)>5 & sum(is.na(f15$Sum.of.Amt.Billed)==TRUE)==0 & 
+  if (nrow(f15)>=5 & nrow(f16)>=5 & sum(is.na(f15$Sum.of.Amt.Billed)==TRUE)==0 & 
     sum(is.na(f16$Sum.of.Amt.Billed)==TRUE)==0)
 
   {
@@ -232,7 +230,16 @@ result
 tab=unique(f13$tab)
 
 
-uti=data.frame(feature=rep(0,length(tab)),coef=rep(0,length(tab)))
+result_Val[[5]]>0
+result_Val[[4]]
+
+tab=unique(f13$tab)
+
+uti=data.frame(feature=rep("a",length(tab)),coef=rep(0,length(tab)),
+stringsAsFactors	=FALSE)
+uti
+class(uti$feature)
+class(uti$coef)
 uti_model=list()
 class(uti$feature)
 class(rep("a",length(tab)))
@@ -240,39 +247,71 @@ class(uti$coef)
 
 
 utility<-function(data)
-
 {
   for ( i in 1:length(unique(data$tab)))
   { 
-    if (nrow(data[data$tab==tab[i],])>5)
-    {
         result=model_lm(data[data$tab==tab[i],])
-        if (result[[5]]>0)
+        if (length(result)!=0)
         {
-          uti$feature[i]=result[[4]]
-          uti$coef[i]=result[[5]]
-          uti_model[[i]]=result
-        }
-    }
+          if(result[[5]]>0)
+          
+          {
+            uti$feature[i]=result[[4]]
+            uti$coef[i]=result[[5]]
+            uti_model[[i]]=result
+          }
+         }   
    }
-print(uti)
+
 uti_model
+print(uti)
 }
 
-
+head(f13)
 max_utility=utility(f13)
 max_utility
 
+length(unique(f13$tab))
 
 
 
+#factor analysis
 
-#k means clustering
+install.packages("nFactors")
+library("nFactors")
+
+
+head(f13)
+
+nScree(f13[4:16], cor=TRUE)
+
+
+fit <- principal(f13[4:16],nfactors=2, rotate="varimax",scores=TRUE)
+fit
+head(fit$values)
+head(fit$scores)
+
+plot(fit)
 
 
 
+unique(f1[,1])
+f3=""
+for ( i in 1:length(tab))
+{f3[f1[,1]==tab[i]]=i}
 
-std_seg_data=f13[4:16]
+head(f3)
+par(mfrow=c(1,1))
+biplot(fit)
+colnames(fit$scores) = c("c81", "c83") 
+biplot(fit$scores, fit$loadings, xlabs=f3,cex=c(0.75,0.6)) 
+abline(h=0) #add a horizontal line in the graph
+abline(v=0)
+
+
+#k means
+head(f13)
+std_seg_data=f13[4:17]
 head(std_seg_data)
 set.seed(1990)
 codes <-kmeans(std_seg_data, 3, iter.max=100,nstart=100)
@@ -283,37 +322,110 @@ kmeans_summary
 head(cluster)
 length(cluster)
 
-f14<-f13
-f14$cluster<-cluster
+
+
+
+#multinomial logit model
+
+
+
+
+f14<-cbind(f13[1],cluster)
 
 head(f14)
 
 
-install.packages("nFactors")
-library("nFactors")
+cluster1=data.frame(cluster=1,X81225="low", X81227="low",X81240="low",
+X81401="low", X83891="high",price=13310.484)
+
+cluster2=data.frame(cluster=2,X81225="low", X81227="low",X81240="low",
+X81401="low", X83891="low", price=4148.068)
 
 
+cluster3=data.frame(cluster=3,X81225="high", X81227="high",X81240="high", 
+X81401="high", X83891="low",  price=7864.825)
+
+nrow(cluster1)
+ncol(cluster1)
 
 
-nScree(f1[4:16], cor=TRUE)
+cluster123<-rbind(cluster1,cluster2,cluster3)
+cluster123
+
+f17 <- merge(f14,cluster123,by="cluster")
+head(f17)
+
+f18=cbind(consumer_id=f17$tab,choicesetid=1:nrow(f17),
+alter=f17$cluster,choice=TRUE,f17[3:ncol(f17)])
+
+head(f18)
+nrow(f18)
+ncol(f18)
+tail(f18)
+
+c=c(1,2,3)
 
 
-fit <- principal(f2,nfactors=2, rotate="varimax",scores=TRUE)
-fit
-fit$values
-plot(fit)
+f19=f18
+for ( i in 1:nrow(f19))
+{
+  add=cluster123[(f17$cluster[i]!=c),]
+  add1=data.frame(consumer_id=rep(f19$consumer_id[i],2))
+  add2=data.frame(choice=rep(FALSE,2))
+  add3=data.frame(choicesetid=rep(i,2))
+  add4=cbind(add1,add3,alter=add[,1],add2,add[,2:ncol(add)])
+  f19=rbind(f19,add4)
+}
+names(add4)==names(f19)
+head(f19)
+tail(f19,10)
+nrow(f18)*3
+884*3
+nrow(f19)
+
+f20<-f19[order(f19$choicesetid,f19$alter),]
+head(f20)
+rownames(f20)<-1:nrow(f20)
+tail(f20)
+
+f21=cbind(f20[1:5],f20[9:10])
 
 
+install.packages("mlogit")
+library("mlogit")
 
-unique(f1[,1])
-f3=""
+install.packages("knitr")
+library("knitr")
 
-for ( i in 1:length(tab))
-{f3[f1[,1]==tab[i]]=i}
+install.packages("xtable")
+library("xtable")
 
-head(f3)
-biplot(fit)
-colnames(fit$scores) = c("c81", "c83") 
-biplot(fit$scores, fit$loadings, xlabs=f3,cex=c(0.75,0.6)) 
-abline(h=0) #add a horizontal line in the graph
-abline(v=0)
+install.packages("caret")
+library("caret")
+
+install.packages("e1071")
+library("e1071")
+
+
+mdata <- mlogit.data(data=f20,
+choice='choice', # variable that contains choice
+shape='long', # tells mlogit how data is structured (every row is alternative)
+varying=5:18, # columns that contain variables that vary across alternatives
+alt.levels = paste('alter',1:3), # levels of the alternatives
+id.var='consumer_id') # consumer id
+kable(head(mdata,6))
+
+set.seed(999) # remember to set the random seed to ensure replicability
+
+
+model <- mlogit(choice~0+X81225+price,
+data=mdata) # 0+ tells model to exclude intercept
+summary(model)
+kable(xtable(summary(model)$CoefTable))
+
+
+head(predict(model,mdata),5)
+
+predicted_alternative <- apply(predict(model,mdata),1,which.max)
+selected_alternative <- f20$alter[f20$choice>0]
+confusionMatrix(predicted_alternative,selected_alternative,positive = "1")
