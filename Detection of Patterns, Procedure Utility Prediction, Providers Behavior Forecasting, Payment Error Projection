@@ -527,8 +527,6 @@ summary(model)
 kable(xtable(summary(model)$CoefTable))
 
 
-1/3.5825e-04
-7.1229e-01*1/3.5825e-04
 
 
 head(predict(model,mdata),5)
