@@ -366,7 +366,7 @@ library("GA")
 
 set.seed(0)
 gaOpt<-ga("binary", fitness=obj, utils=uti_mat1, margin=margin1, numProd=3, 
-min=min(uti_mat)*13,max=max(uti_mat)*13,nBits=length(margin), maxiter=100)
+nBits=length(margin), maxiter=100)
 
 
 summary(gaOpt)
