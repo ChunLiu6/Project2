@@ -484,7 +484,6 @@ names(add4)==names(f19)
 head(f19)
 tail(f19,10)
 nrow(f18)*3
-884*3
 nrow(f19)
 
 f20<-f19[order(f19$choicesetid,f19$alter),]
