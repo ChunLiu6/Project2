@@ -1,4 +1,4 @@
-f1<-read.csv("gene.csv")
+f1<-read.csv("nmtc.csv")
 head(f1)
 
 #correlation matrix
@@ -20,6 +20,9 @@ corrplot(cor(temp))
 title(x$Group.1[i],line=2.5)
 
 }
+
+
+
 
 
 
@@ -85,7 +88,7 @@ lines(f4$dateTime[f4$tab=="Uma"],f4$average_score[f4$tab=="Uma"],col="cyan3")
 lines(f4$dateTime[f4$tab=="Val"],f4$average_score[f4$tab=="Val"],col="darkred")
 
 
-#arima
+#arima model
 
 
 
@@ -176,7 +179,7 @@ ncol(f13)
 
 
 
-#for each physician
+#conjoint analysis for each provider
 
 result=list()
 
@@ -214,7 +217,8 @@ model_lm<-function(data)
       plot(residuals)
       hist(residuals)
       boxplot(residuals)
-      significant=summary_model$coefficients[which(summary_model$coefficients[,4]<0.05),]
+      #p-value<0.05
+      significant=summary_model$coefficients[which(summary_model$coefficients[,4]<0.05),] 
       result[[3]]=significant
       summary_feature=summary_model$coefficients
       max_utility=max(summary_feature[summary_feature[,4]<0.05,1])
@@ -229,12 +233,6 @@ result
 
 tab=unique(f13$tab)
 
-
-result_Val[[5]]>0
-result_Val[[4]]
-
-tab=unique(f13$tab)
-
 uti=data.frame(feature=rep("a",length(tab)),coef=rep(0,length(tab)),
 stringsAsFactors	=FALSE)
 uti
@@ -245,6 +243,14 @@ class(uti$feature)
 class(rep("a",length(tab)))
 class(uti$coef)
 
+temp=rep(0,16-4+1)
+
+
+names(temp)=names(f13[4:16])
+
+uti_matrix=matrix(rep(0,16-4+1),nrow=(16-4+1),ncol=length(tab))
+
+uti_result=list()
 
 utility<-function(data)
 {
@@ -259,19 +265,125 @@ utility<-function(data)
             uti$feature[i]=result[[4]]
             uti$coef[i]=result[[5]]
             uti_model[[i]]=result
+            for ( j in 1:nrow(result[[3]]))
+            {
+              temp[names(temp)==rownames(result[[3]])[j]]=result[[3]][j,1]
+            }
+            uti_matrix[,i]=temp
           }
          }   
    }
+uti_result[[1]]=print(uti)
+uti_result[[2]]=uti_model
+uti_result[[3]]=uti_matrix
+uti_result
 
-uti_model
-print(uti)
 }
 
 head(f13)
 max_utility=utility(f13)
-max_utility
 
-length(unique(f13$tab))
+
+
+
+
+
+#conjoint analysis for all providers
+
+
+
+
+uti_mat=t(max_utility[[3]])
+
+
+uti_mat1=matrix(cbind(uti_mat[,1:4],uti_mat[,8:9]),nrow=14)
+
+uti_mat2=matrix(rbind(uti_mat1[1,],uti_mat1[4:5,],uti_mat1[7:8,],
+uti_mat1[10:11,],uti_mat1[13:14,]),nrow=9)
+
+
+class(tab)
+tab1<-as.character(tab)
+
+rownames(uti_mat2)=c(tab1[1],tab1[4:5],tab1[7:8],tab1[10:11],tab1[13:14])
+names(f13[4:16])
+colnames(uti_mat2)=c(names(f13[4:7]),names(f13[11:12]))
+
+class(uti_mat2)
+
+max(uti_mat2)*13
+
+
+
+margin<-read.csv("payment_rate.csv")
+
+margin=rbind(margin[1:4,],margin[8:9,])
+margin$Proc.Code=paste("X",margin$Proc.Code,sep="")
+
+margin1<-as.matrix(margin$payment.rate)
+class(margin1)
+
+
+
+dim(uti_mat1)
+dim(margin1)
+
+
+
+
+
+profit<-function(offered, utils, margin){
+  
+  offered1<-c(1, offered)
+  
+  uOffered <- t(apply(utils, 1, function(x)(x * offered1)))
+  maxUtil <- apply(uOffered, 1, max)
+  
+  prodHighest<-matrix(0, nrow(utils), ncol(utils))
+  
+  for(i in 1:nrow(utils)){
+    for(j in 1:ncol(utils)){
+      if(uOffered[i, j] == maxUtil[i]) {prodHighest[i,j]=1;break}
+    }
+  }
+  profitVec<-apply(prodHighest, 1, function(x){x %*% margin})
+  sum(profitVec)
+}
+
+
+
+obj<-function(offered, utils, margin, numProd){
+  
+  pr<-profit(offered, utils, margin)
+  penalty<-10*max(margin)*abs(sum(offered)-numProd)
+  
+  pr-penalty
+}
+
+
+install.packages("GA")
+library("GA")
+
+set.seed(0)
+gaOpt<-ga("binary", fitness=obj, utils=uti_mat1, margin=margin1, numProd=3, 
+min=min(uti_mat)*13,max=max(uti_mat)*13,nBits=length(margin), maxiter=100)
+
+
+summary(gaOpt)
+sol <- gaOpt@solution
+sol
+
+print(paste("Number of solutions:",nrow(sol)))
+install.packages("knitr")
+library("knitr")
+kable(margin[which(c(sol[1,])==1),])
+par(mfrow=c(1,1))
+plot(gaOpt)
+
+
+profit(sol[1,], uti_mat2, margin1)
+
+
 
 
 
@@ -321,14 +433,6 @@ kmeans_summary <- aggregate(std_seg_data,by=list(codes$cluster),FUN=mean)
 kmeans_summary
 head(cluster)
 length(cluster)
-
-
-
-
-#multinomial logit model
-
-
-
 
 f14<-cbind(f13[1],cluster)
 
@@ -415,7 +519,6 @@ alt.levels = paste('alter',1:3), # levels of the alternatives
 id.var='consumer_id') # consumer id
 kable(head(mdata,6))
 
-set.seed(999) # remember to set the random seed to ensure replicability
 
 
 model <- mlogit(choice~0+X81225+price,
@@ -424,8 +527,15 @@ summary(model)
 kable(xtable(summary(model)$CoefTable))
 
 
+1/3.5825e-04
+7.1229e-01*1/3.5825e-04
+
+
 head(predict(model,mdata),5)
 
 predicted_alternative <- apply(predict(model,mdata),1,which.max)
 selected_alternative <- f20$alter[f20$choice>0]
 confusionMatrix(predicted_alternative,selected_alternative,positive = "1")
+
+
+
