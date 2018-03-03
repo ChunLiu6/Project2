@@ -179,7 +179,7 @@ ncol(f13)
 
 
 
-#conjoint analysis for each provider
+#utility estimation for each provider
 
 result=list()
 
@@ -288,7 +288,7 @@ max_utility=utility(f13)
 
 
 
-#conjoint analysis for all providers
+#profit optimization for all providers
 
 
 
@@ -386,6 +386,9 @@ profit(sol[1,], uti_mat2, margin1)
 
 
 
+# multinomial logistic regression for choice prediction
+
+
 
 #factor analysis
 
@@ -422,6 +425,9 @@ abline(v=0)
 
 
 #k means
+
+
+
 head(f13)
 std_seg_data=f13[4:17]
 head(std_seg_data)
@@ -433,6 +439,10 @@ kmeans_summary <- aggregate(std_seg_data,by=list(codes$cluster),FUN=mean)
 kmeans_summary
 head(cluster)
 length(cluster)
+
+
+
+
 
 f14<-cbind(f13[1],cluster)
 
