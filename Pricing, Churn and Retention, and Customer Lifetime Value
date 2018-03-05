@@ -1,0 +1,97 @@
+
+
+data <- read.csv('telco_churn_data.csv', header=TRUE) 
+head(data)
+
+data=data[1:5000,]
+mean(data$SeniorCitizen)
+data$PhoneService=NULL
+ 
+data <- within(data, Churn <- relevel(Churn, ref = 'No')) # making sure Churn == 'Yes' is coded as 1 and Churn == 'No' as zero, in binary logistic regression
+head(data,5) # take a look at the data
+
+
+
+colnames(data)
+
+
+# Logistic Regression
+
+
+set.seed(999) # set seed
+model <- glm(Churn ~ .,  
+             data=data,  
+             family=binomial(link = "logit"))
+summary(model)
+
+
+exp(0.411512)
+
+-1.709170/0.016378
+
+
+
+
+# Predictions
+
+
+data$churn_prob <- predict.glm(model, newdata=data, type="response")
+hist(data$churn_prob)
+
+head(data$churn_prob)
+sum(data$churn_prob < 0.2)/length(data$churn_prob)
+
+data[which(data$churn_prob==max(data$churn_prob)),]
+data[which(data$churn_prob==min(data$churn_prob)),]
+
+library('caret') # may need to install this package first
+confusionMatrix(1*(data$churn_prob>0.5),1*(data$Churn=='Yes'))
+
+
+
+
+# Monetary value of a contract
+
+-model$coefficients[7]/model$coefficients[10]
+
+
+# Increase in monthly charges and churn
+
+
+pf<-function(incr, data)
+{
+  d <- data[data$Churn=="No",] # only keeping customers that have not churned yet
+  d$MonthlyCharges <- d$MonthlyCharges*incr # possible increase in monthly charges (no increase is incr==1.0)
+  g <- 0.97 # discount factor (money in the next period is worth 0.99 money in the period before that)
+  p <- 1-predict.glm(model, newdata=d, type="response") # retention probability based on logistic regresion (we assume retention probability will remain constant for each consumer, conditional on fixed d$MonthlyCharges)
+  clv <- d$MonthlyCharges/(1-p*g) # CLV formula
+  return(sum(clv)) # sum of discounted profits across all individual consumers
+}
+
+pf(1.0, data) # no increase in price: 1 * charge_amount
+pf(1.5, data) # 50% increase: (1 + 0.5) * charge_amount
+pf(2, data) # 100% increase / doubling: 2 * charge_amount
+pf(3, data) # 200% increase / trippling: 3 * charge_amount
+
+# Discounted profit optimization
+
+
+set.seed(999)
+opt<-optim(1.0, pf, method="L-BFGS-B", control=list(fnscale=-1), data=data)
+
+
+
+c(opt$par, opt$value)
+
+
+pf(opt$par, data) - pf(1.0, data)
+
+pf(1.2, data)-pf(0.8, data)
+
+
+d=data[4,]
+d$MonthlyCharges <- d$MonthlyCharges*1.2
+p1 <- 1-predict.glm(model, newdata=d, type="response")
+
+
+0.9248487 ^4
