@@ -1,6 +1,6 @@
 
 
-data <- read.csv('telco_churn_data.csv', header=TRUE) 
+data <- read.csv('churn_data.csv', header=TRUE) 
 head(data)
 
 data=data[1:5000,]
@@ -95,3 +95,310 @@ p1 <- 1-predict.glm(model, newdata=d, type="response")
 
 
 0.9248487 ^4
+
+
+
+f1<-read.csv("Customer-Churn.csv")
+head(f1)
+nrow(f1)
+length(unique(f1$customerID))
+#check duplicate
+sum(duplicated(f1)==TRUE)
+
+sum(f1$Churn=="Yes")
+unique(f1$Churn)
+Churn=rep(0,nrow(f1))
+Churn[f1$Churn=="Yes"]=1
+Churn<-as.factor(Churn)
+#f1$Churn<-Churn
+class(f1$Churn)
+head(f1)
+
+#check class
+class(f1$SeniorCitizen)
+f1$SeniorCitizen=as.factor(f1$SeniorCitizen)
+
+
+
+#check null
+which(is.na(f1)==TRUE)
+missing=rep(0,nrow(f1))
+
+for ( i in 1:nrow(f1))
+{
+  if(sum(is.na(f1[i,])==TRUE)>0) {missing[i]=1}
+}
+which(missing==1)
+f1[which(missing==1),]
+
+f2<-f1[-which(missing==1),]
+f2=f1
+nrow(f2)
+
+set.seed(12345)
+f2$rn=runif(nrow(f2))
+f3<-f2[order(f2$rn,decreasing=TRUE),]
+f3<-f3[,2:(ncol(f3)-1)]
+head(f3)
+nrow(f3)
+
+train=f3[1:ceiling(0.80*nrow(f3)),]
+validation=f3[(ceiling(0.80*nrow(f3))+1):nrow(f3),]
+#test=f3[(ceiling(0.95*nrow(f3))+1):nrow(f3),]
+
+nrow(train)
+nrow(validation)
+#nrow(test)
+
+
+
+train=f3[1:ceiling(0.80*nrow(f3)),]
+validation=f3[(ceiling(0.80*nrow(f3))+1):nrow(f3),]
+#test=f3[(ceiling(0.95*nrow(f3))+1):nrow(f3),]
+
+nrow(train)
+nrow(validation)
+#nrow(test)
+
+#logistic regression
+
+
+model<-glm(Churn~.,data=train, family=binomial(link = "logit"))
+summary(model)
+
+AIC(model)
+BIC(model)
+
+
+
+set.seed(12345)
+prob=predict.glm(model,newdata=validation,type="response")
+head(prob)
+predicted=rep("No",nrow(validation))
+predicted[prob>0.35]="Yes"
+class(predicted)
+head(predicted)
+predicted=as.factor(predicted)
+
+install.packages("ddalpha")
+install.packages("ipred")
+install.packages("caret")
+library("caret")
+
+set.seed(12345)
+confusionMatrix(predicted,validation$Churn,positive="Yes")
+
+install.packages("ROCR")
+library("ROCR")
+ROCRpred<-prediction(prob,validation$Churn)
+ROCRperf <- performance(ROCRpred, 'tpr','fpr')
+plot(ROCRperf, colorize = TRUE, text.adj = c(-0.2,1.7),main="ROC Curve")
+
+
+install.packages("AUC")
+library("AUC")
+auc(roc(prob,validation$Churn))
+plot(roc(predicted,validation$Churn))
+
+
+
+importance=varImp(model)
+class(importance)
+importance
+rownames(importance)
+importance1=cbind(rownames(importance),importance)
+importance1=importance1[order(importance1$Overall,decreasing=TRUE),]
+importance1
+plot(importance1$Overall,type="o")
+
+
+
+#which(is.na(validation)==TRUE)
+#validation[is.na(validation$TotalCharges)==TRUE,]
+
+test<-f1[!is.na(f1$TotalCharges),]
+
+f5<-test[test$tenure<summary(test$tenure)[3]
+& test$Contract=="Month-to-month"
+& test$PaperlessBilling=="Yes"
+& test$TotalCharges>summary(test$TotalCharges)[3]
+& test$SeniorCitizen==1
+& test$Dependents=="No"
+& test$MultipleLines=="Yes"
+& test$PaymentMethod=="Electronic check"
+& test$InternetService!="No",]
+
+
+nrow(f5)
+nrow(f5[f5$Churn=="Yes",])
+nrow(f5[f5$Churn=="Yes",])/nrow(f5)
+nrow(f1[f1$Churn=="Yes",])
+nrow(f1[f1$Churn=="Yes",])/nrow(f1)
+
+
+(nrow(f5[f5$Churn=="Yes",])/nrow(f5)) / (nrow(f1[f1$Churn=="Yes",])/nrow(f1))
+
+
+hist(f1$tenure,main="Distribution of tenure",xlab="Tenure")
+
+
+
+
+#random forest
+
+
+install.packages("randomForest")
+library("randomForest")
+head(train)
+model_rf=randomForest(Churn~.,data=train,na.action=na.omit)
+summary(model_rf)
+prob_rf = predict(model_rf,type="prob",newdata=validation)[,2]
+head(prb_rf)
+
+predicted_rf<-rep("No",nrow(validation))
+predicted_rf[prob_rf>0.35]="Yes"
+confusionMatrix(predicted_rf,validation$Churn,positive="Yes")
+
+ROCRpred_rf<-prediction(prob,validation$Churn)
+ROCRperf_rf <- performance(ROCRpred, 'tpr','fpr')
+plot(ROCRperf_rf, colorize = TRUE, text.adj = c(-0.2,1.7))
+
+
+install.packages("AUC")
+library("AUC")
+auc(roc(prob_rf,validation$Churn))
+
+
+
+varImp(model_rf)
+importance_rf=varImp(model_rf)
+importance_rf
+rownames(importance_rf)
+importance1_rf=cbind(rownames(importance_rf),importance_rf)
+importance1_rf=importance1_rf[order(importance1_rf$Overall,decreasing=TRUE),]
+importance1_rf
+plot(importance1_rf$Overall,type="o")
+
+sum(f3$Churn=="Yes")/nrow(f3)
+
+
+summary(f3$TotalCharges[f3$Churn=="Yes"])
+plot(f3$TotalCharges[f3$Churn=="Yes"])
+summary(f3$TotalCharges[f3$Churn=="No"])
+
+plot(f3$TotalCharges[f3$Churn=="No"])
+head(f3)
+install.packages("ggplot2")
+library("ggplot2")
+
+f4<-f3
+f4$index=1:nrow(f4)
+ggplot(f4, aes(x=index, y=TotalCharges, color=Churn)) +
+  geom_point()
+
+ggplot(f4, aes(x=index, y=tenure, color=Churn)) +
+  geom_point()
+
+
+#decision tree
+
+install.packages("rpart")
+library("rpart")
+model_dctr=rpart(Churn~.,data=train,method="class")
+summary(model_dctr)
+printcp(model_dctr)
+plotcp(model_dctr)
+plot(model_dctr)
+text(model_dctr,use.n=TRUE, all=TRUE, cex=.6)
+model_dctr_prune=prune(model_dctr,cp=0.01)
+plot(model_dctr_prune)
+text(model_dctr_prune,use.n=TRUE, all=TRUE, cex=.8)
+plot(model_dctr_prune, uniform=TRUE,margin=0.05)
+text(model_dctr_prune, use.n=TRUE, all=TRUE, cex=1)
+
+install.packages("rpart.plot")
+library("rpart.plot")
+
+rpart.plot(model_dctr,
+shadow.col="gray", # add shadows just for kicks
+digits=2,
+main="Decision Tree")
+
+
+prob_dctr=predict(model_dctr,type="prob",newdata=validation)[,2]
+head(prob_dctr)
+length(prob_dctr)
+predicted_dctr=rep("No",nrow(validation))
+predicted_dctr[prob_dctr>0.35]="Yes"
+class(predicted_dctr)
+head(predicted_dctr)
+predicted_dctr=as.factor(predicted_dctr)
+head(predicted_dctr)
+set.seed(12345)
+confusionMatrix(predicted_dctr,validation$Churn,positive="Yes")
+
+install.packages("ROCR")
+library("ROCR")
+ROCRpred_dctr<-prediction(prob_dctr,validation$Churn)
+ROCRperf_dctr <- performance(ROCRpred_dctr, 'tpr','fpr')
+plot(ROCRperf_dctr, colorize = TRUE, text.adj = c(-0.2,1.7),main="ROC Curve")
+
+
+install.packages("AUC")
+library("AUC")
+auc(roc(prob_dctr,validation$Churn))
+plot(roc(predicted_rf,test$Churn))
+
+
+varImp(model_dctr)
+importance_dctr=varImp(model_dctr)
+importance_dctr
+rownames(importance_dctr)
+importance1_dctr=cbind(rownames(importance_dctr),importance_dctr)
+importance1_dctr=importance1_dctr[order(importance1_dctr$Overall,decreasing=TRUE),]
+importance1_dctr
+plot(importance1_dctr$Overall,type="o")
+
+
+unique(f1$InternetService)
+summary(f1$tenure)
+unique(f1$SeniorCitizen)
+
+test<-f1[!is.na(f1$TotalCharges),]
+f6<-test[test$Contract=="Month-to-month"
+& test$InternetService=="Fiber optic"
+& test$tenure<15.5,]
+
+f7<-test[test$Contract=="Month-to-month"
+& test$InternetService=="Fiber optic"
+& test$tenure>53.5
+& test$SeniorCitizen==1,]
+
+f8<-rbind(f6,f7)
+nrow(f8)
+head(f8)
+
+
+nrow(f8[f8$Churn=="Yes",])
+nrow(f8[f8$Churn=="Yes",])/nrow(f8)
+nrow(f1[f1$Churn=="Yes",])
+nrow(f1[f1$Churn=="Yes",])/nrow(f1)
+
+
+(nrow(f8[f8$Churn=="Yes",])/nrow(f8)) / (nrow(f1[f1$Churn=="Yes",])/nrow(f1))
+
+nrow(f6)
+nrow(f6[f6$Churn=="Yes",])
+nrow(f6[f6$Churn=="Yes",])/nrow(f6)
+nrow(f1[f1$Churn=="Yes",])
+nrow(f1[f1$Churn=="Yes",])/nrow(f1)
+(nrow(f6[f6$Churn=="Yes",])/nrow(f6)) / (nrow(f1[f1$Churn=="Yes",])/nrow(f1))
+
+nrow(f7)
+nrow(f7[f7$Churn=="Yes",])
+nrow(f7[f7$Churn=="Yes",])/nrow(f7)
+nrow(f1[f1$Churn=="Yes",])
+nrow(f1[f1$Churn=="Yes",])/nrow(f1)
+(nrow(f7[f7$Churn=="Yes",])/nrow(f7)) / (nrow(f1[f1$Churn=="Yes",])/nrow(f1))
+
+
