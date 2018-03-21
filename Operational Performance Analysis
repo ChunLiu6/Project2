@@ -1,0 +1,409 @@
+f1<-read.csv("daily_logs.csv")
+head(f1)
+nrow(f1)
+
+#check null
+sum(which(is.na(f1)))
+
+#check duplicate
+sum(duplicated(f1)==TRUE)
+
+#unique client id
+unique(f1$client_id)
+
+#unique api_endpoint
+unique(f1$api_endpoint)
+
+
+
+
+hist(f1$num_requests)
+summary(f1$num_requests)
+hist(f1$avg_latency,main="Distribution of Average Latency",xlab="Bin")
+summary(f1$avg_latency)
+
+#scatter plot
+
+#ggplot
+install.packages("ggplot2")
+library("ggplot2")
+ggplot(f1, aes(x=avg_latency, y=num_requests,colour=client_id)) + 
+geom_point()+xlab("average latency")+ylab("number of requests") +
+ggtitle("Scatter Plot of Average Latency vs Number of Requests", subtitle = "Color By Client ID")
+
+ggplot(f1, aes(x=avg_latency, y=num_requests,colour=api_endpoint)) + 
+geom_point()+xlab("average latency")+ylab("number of requests") +
+ggtitle("Scatter Plot of Average Latency vs Number of Requests", subtitle = "Color By API Endpoint")+
+theme(plot.title = element_text(size=9))
+
+
+index=which(f1$num_requests>2e+06)
+
+avg_latency_index=f1$avg_latency[index]
+
+client_id_index=unique(f1$client_id[index])
+sum_of_number_of_requests1=sum(f1$num_requests[f1$client_id==client_id_index])
+sum_of_number_of_requests1/sum(f1$num_requests)
+api_endpoint_index=unique(f1$api_endpoint[index])
+
+
+class(f1$api_endpoint)
+sum_of_number_of_requests2=sum(f1$num_requests[f1$api_endpoint==api_endpoint_index])
+sum_of_number_of_requests2/sum(f1$num_requests)
+
+unique(f1$client_id[f1$num_requests>7e+05&f1$num_requests<7.5e+05])
+unique(f1$api_endpoint[f1$num_requests>7e+05&f1$num_requests<7.5e+05])
+sum(f1$num_requests[f1$client_id=="pjldg61blqydhxlq49gyf2rwlcenw5"])/sum(f1$num_requests)
+sum(f1$num_requests[f1$api_endpoint=="GET /v5/streams/:id"])/sum(f1$num_requests)
+
+
+
+
+f2<-read.csv("app_metadata.csv")
+head(f2)
+
+f2[which(as.character(f2$client_id)==as.character(unique(f1$client_id[index]))),]
+f2[f2$client_id =="pjldg61blqydhxlq49gyf2rwlcenw5",]
+
+index2=which((as.numeric(f1$avg_latency<200) * 
+as.numeric(f1$num_requests<2e+06)) ==1)
+
+num_requests_index2=f1$num_requests[index2]
+sum(num_requests_index2)
+client_id_index2=unique(f1$client_id[index2])
+
+
+index2=which((as.numeric(f1$avg_latency<50) * 
+as.numeric(f1$num_requests<2e+06)) ==1)
+num_requests_index2=f1$num_requests[index2]
+sum(num_requests_index2)
+
+client_id_index2=unique(f1$client_id[index2])
+
+
+
+
+#clustering
+
+head(f1)
+f3<-f1[,4:5]
+head(f3)
+std_seg_data <- scale(f3)
+dist <- dist(std_seg_data, method = "euclidean")
+head(dist)
+
+set.seed(1990)
+clust <- hclust(dist, method = "ward.D2")
+
+plot(clust)
+
+h_cluster <- cutree(clust, 3)
+rect.hclust(clust, k=3, border="red")
+
+
+
+h_cluster_summary=aggregate(f1[,4:5],by=list(h_cluster),FUN=mean)
+names(h_cluster_summary)=c("cluster","num_requests", "avg_latency")
+h_cluster_summary
+
+
+
+aggregate(f1[,4],by=list(h_cluster),FUN=length)
+
+aggregate(f1[,4],by=list(h_cluster),FUN=sum)
+
+set.seed(1990)
+#library(NbClust)
+#library(mclust)
+library(gmodels)
+
+#set.seed(1990)
+#NbClust(data=std_seg_data, min.nc=3, max.nc=15, index="all", method="ward.D2")
+
+#set.seed(1990)
+#NbClust(data=std_seg_data, min.nc=3, max.nc=5, index="all", method="kmeans")
+
+set.seed(1990)
+kmeans_Cluster3 <-kmeans(std_seg_data, 3, iter.max=100,nstart=100)
+kmeans_Cluster3
+kmeans_Cluster3$centers
+head(kmeans_Cluster3$cluster)
+kmeans_cluster_summary=aggregate(f1[,4:5],by=list(kmeans_Cluster3$cluster),FUN=mean)
+kmeans_cluster_summary
+
+Kmean_Cluster<-factor(kmeans_Cluster3$cluster,levels = c(1,2,3),
+labels = c("high request short latency", 
+"low request long latency", "low request short latency"))
+
+set.seed(1990)
+client_id_cross_cluster=CrossTable(f1$api_endpoint,h_cluster,prop.chisq = FALSE, prop.r = F, prop.c = F,
+           prop.t = F,chisq = T)
+set.seed(1990)
+client_id_cross_cluster=CrossTable(f1$client_id,h_cluster,prop.chisq = FALSE, prop.r = F, prop.c = F,
+           prop.t = F,chisq = T)
+
+f5<-cbind(f1,h_cluster)
+head(f5)
+
+write.csv(f5,"f5.csv")
+
+
+
+install.packages("corrplot")
+library(corrplot)
+cor(f1[4:5])
+corrplot(cor(f1[4:5]), order = "hclust")
+
+head(f1)
+class(f1$client_id)
+class(f1$api_endpoint)
+
+model1=lm(num_requests~0+client_id+api_endpoint , data=f1)
+model1_summary=summary(model1)
+model1_summary
+model1_summary$coef
+class(model1_summary$coef)
+model1_significant=model1_summary$coef[,1][model1_summary$coef[,4]<0.05]
+
+
+model2=lm(avg_latency~0+client_id+api_endpoint , data=f1)
+summary(model2)
+
+
+summary(f1$avg_latency)
+
+
+head(f2)
+
+client_id1=f2[f2$client_id=="8bmp6j83z5w4mepq0dn0q1a7g186azi",]
+client_id2=f2[f2$client_id=="pjldg61blqydhxlq49gyf2rwlcenw5",]
+
+client_id3=f2[f2$client_id=="bjf85qht726415euqyjts1eeyxp4x8b",]
+client_id4=f2[f2$client_id=="33kozedd0zs6fbauka98psnc7zwom2s",]
+client_id5=f2[f2$client_id=="nquiw61tb595zscbxktdhwe2i45py5m",]
+
+client_id_all=rbind(client_id1, client_id2,client_id3,client_id4,client_id5)
+client_id_all
+
+
+
+
+f6<-read.csv("1_agg.csv")
+f10<-read.csv("3_daily_logs_product.csv")
+head(f6)
+nrow(f6)
+head(f10)
+nrow(f10)
+
+length(unique(f6$product))
+max(f6$IDOfCount)
+length(unique(f10$product))
+
+
+f10$req_lat=f10$num_requests/f10$avg_latency
+f10$lat_req=f10$avg_latency/f10$num_requests
+
+
+head(f10)
+which(f10$avg_latency==0)
+
+nrow(f10)
+head(f10)
+
+
+
+f7<-matrix(0,nrow=89,ncol=102)
+
+
+f9=f10
+which(f9$avg_latency==0)
+head(f9)
+nrow(f9)
+unique(f9$product)
+
+sum(is.na(f9)==TRUE)
+sum(is.na(f6)==TRUE)
+sum(is.na(f7)==TRUE)
+
+
+for (j in 1:102)
+  {
+    temp=f9[as.character(f9$product)==as.character(f6$product[j]),]
+    for ( i in 1:89)
+    {
+      f7[i,j]=temp$req_lat[i]
+    }
+
+}
+max(f7)
+offered=rep(0,97)
+offered[1]=1
+offered[2]=1
+offered[3]=1
+utils=f7
+dim(utils)
+
+profit<-function(offered, utils){
+  
+  offered1<-c(offered)
+  
+  uOffered <- t(apply(utils, 1, function(x)(x * offered1)))
+  maxUtil <- apply(uOffered, 1, max)  
+
+  prodHighest<-matrix(0, nrow(utils), ncol(utils))
+  
+  for(i in 1:nrow(utils)){
+    for(j in 1:ncol(utils)){
+      if(uOffered[i, j] == maxUtil[i]) {prodHighest[i,j]=maxUtil[i] ;break}
+    }
+  }
+  
+  sum(prodHighest)
+}
+
+
+obj<-function(offered, utils, numProd){
+  
+  pr<- profit(offered, utils)
+  penalty<-3*max(f7)*abs(sum(offered)-numProd)
+  
+  (pr-penalty)
+}
+
+install.packages("GA")
+library("GA")
+
+set.seed(0)
+gaOpt<-ga("binary", fitness=obj, utils=f7, numProd=2, nBits=102, maxiter=200)
+
+summary(gaOpt)
+sol <- gaOpt@solution
+sol
+
+print(paste("Number of solutions:",nrow(sol)))
+install.packages("knitr")
+library("knitr")
+
+plot(gaOpt)
+
+which(sol[1,]==1)
+
+f6[which(sol[1,]==1),]
+
+
+profit(sol[1,], f7)
+
+
+
+#minimization
+
+
+f6<-read.csv("1_agg.csv")
+f10<-read.csv("3_daily_logs_product.csv")
+head(f6)
+nrow(f6)
+head(f10)
+nrow(f10)
+
+length(unique(f6$product))
+max(f6$IDOfCount)
+length(unique(f10$product))
+
+
+f10$req_lat=f10$num_requests/f10$avg_latency
+f10$lat_req=f10$avg_latency/f10$num_requests
+
+head(f10)
+which(f10$avg_latency==0)
+
+nrow(f10)
+head(f10)
+
+
+
+f7<-matrix(0,nrow=90,ncol=97)
+
+
+f9=f10
+which(f9$avg_latency==0)
+head(f9)
+nrow(f9)
+unique(f9$product)
+
+sum(is.na(f9)==TRUE)
+sum(is.na(f6)==TRUE)
+
+sum(is.na(f7)==TRUE)
+j=1
+i=1
+
+
+
+for (j in 1:97)
+  {
+    temp=f9[as.character(f9$product)==as.character(f6$product[j]),]
+    for ( i in 1:nrow(temp))
+    {
+      f7[i,j]=temp$lat_req[i]
+    }
+}
+max(f7)
+offered=rep(0,97)
+offered[1]=1
+offered[2]=1
+offered[3]=1
+utils=f7
+dim(utils)
+
+profit<-function(offered, utils){
+  
+  offered1<-c(offered)
+  
+  uOffered <- t(apply(utils, 1, function(x)(x * offered1)))
+  maxUtil <- apply(uOffered, 1, max)  
+
+  prodHighest<-matrix(0, nrow(utils), ncol(utils))
+  
+  for(i in 1:nrow(utils)){
+    for(j in 1:ncol(utils)){
+      if(uOffered[i, j] == maxUtil[i]) {prodHighest[i,j]=maxUtil[i] ;break}
+    }
+  }
+  
+  sum(prodHighest)
+}
+
+
+obj<-function(offered, utils, numProd){
+  
+  pr<- profit(offered, utils)
+  penalty<-5*max(f7)*abs(sum(offered)-numProd)
+  
+  (pr-penalty)
+}
+
+install.packages("GA")
+library("GA")
+
+set.seed(0)
+gaOpt<-ga("binary", fitness=obj, utils=f7, numProd=5, nBits=97, maxiter=200)
+
+summary(gaOpt)
+sol <- gaOpt@solution
+sol
+
+print(paste("Number of solutions:",nrow(sol)))
+install.packages("knitr")
+library("knitr")
+
+plot(gaOpt)
+
+which(sol[1,]==1)
+
+f6[which(sol[1,]==1),]
+
+
+profit(sol[1,], f7)
+
+
+
