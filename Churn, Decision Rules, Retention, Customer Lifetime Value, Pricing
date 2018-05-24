@@ -1,9 +1,6 @@
 
 
-data <- read.csv('churn_data.csv', header=TRUE) 
-head(data)
 
-data=data[1:5000,]
 mean(data$SeniorCitizen)
 data$PhoneService=NULL
  
